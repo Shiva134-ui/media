@@ -17,6 +17,10 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
+
+
+
+
 const emailInput = document.getElementById("email") || document.getElementById("signup-email");
 const passwordInput = document.getElementById("password") || document.getElementById("signup-password");
 const loginButton = document.getElementById("login-button");
@@ -29,26 +33,12 @@ const sendButton = document.getElementById("send-button");
 
 const messagesRef = collection(db, "messages");
 
-// Prevent Infinite Redirects
-function redirectTo(path) {
-    if (window.location.pathname !== path) {
-        console.log(`Redirecting to: ${path}`);
-        window.location.href = path;
-    } else {
-        console.log(`Already on: ${path}`);
-    }
-}
-
-// Add Event Listeners
 if (loginButton) {
     loginButton.addEventListener("click", () => {
         const email = emailInput.value;
         const password = passwordInput.value;
         signInWithEmailAndPassword(auth, email, password)
-            .then(() => {
-                console.log("Login successful");
-                redirectTo("/chat.html");
-            })
+            .then(() => window.location.href = "chat.html")
             .catch((error) => alert(error.message));
     });
 }
@@ -58,10 +48,7 @@ if (signupButton) {
         const email = emailInput.value;
         const password = passwordInput.value;
         createUserWithEmailAndPassword(auth, email, password)
-            .then(() => {
-                console.log("Signup successful");
-                redirectTo("/chat.html");
-            })
+            .then(() => window.location.href = "chat.html")
             .catch((error) => alert(error.message));
     });
 }
@@ -69,54 +56,44 @@ if (signupButton) {
 if (logoutButton) {
     logoutButton.addEventListener("click", () => {
         signOut(auth)
-            .then(() => {
-                console.log("Logout successful");
-                redirectTo("/index.html");
-            })
+            .then(() => window.location.href = "index.html")
             .catch((error) => alert(error.message));
     });
 }
 
-// Monitor Authentication State
 onAuthStateChanged(auth, (user) => {
-    console.log("Auth state changed:", user);
     if (user) {
-        // Redirect to chat.html only if not already there
-        if (welcomeMessage) {
-            welcomeMessage.textContent = `Welcome, ${user.email}`;
+        if (window.location.pathname !== "/chat.html") {
+            window.location.href = "chat.html";
         }
+        welcomeMessage.textContent = `Welcome, ${user.email}`;
         fetchMessages();
-        redirectTo("/chat.html");
     } else {
-        // Redirect to index.html only if not on index.html or signup.html
-        if (!window.location.pathname.endsWith("/index.html") && !window.location.pathname.endsWith("/signup.html")) {
-            redirectTo("/index.html");
+        if (window.location.pathname !== "/index.html" && window.location.pathname !== "/signup.html") {
+            window.location.href = "index.html";
         }
     }
 });
 
-// Fetch Messages
+
+// Fetch messages in real-time
 function fetchMessages() {
     const messagesQuery = query(messagesRef, orderBy("timestamp", "asc"));
     onSnapshot(messagesQuery, (snapshot) => {
-        if (messagesDiv) {
-            messagesDiv.innerHTML = "";
-            snapshot.forEach((doc) => {
-                const messageData = doc.data();
-                const messageDiv = document.createElement("div");
-                messageDiv.classList.add("message");
-                messageDiv.textContent = `${messageData.user}: ${messageData.text}`;
-                if (messageData.user === auth.currentUser.email) {
-                    messageDiv.classList.add("user");
-                }
-                messagesDiv.appendChild(messageDiv);
-            });
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        }
+        messagesDiv.innerHTML = "";
+        snapshot.forEach((doc) => {
+            const messageData = doc.data();
+            const messageDiv = document.createElement("div");
+            messageDiv.classList.add("message");
+            messageDiv.textContent = `${messageData.user}: ${messageData.text}`;
+            if (messageData.user === auth.currentUser.email) messageDiv.classList.add("user");
+            messagesDiv.appendChild(messageDiv);
+        });
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
     });
 }
 
-// Send Message
+// Send a new message
 if (sendButton) {
     sendButton.addEventListener("click", async () => {
         const messageText = messageInput.value.trim();
@@ -130,6 +107,10 @@ if (sendButton) {
         }
     });
 }
+
+
+
+
 
 
 
