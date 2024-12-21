@@ -17,10 +17,6 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-
-
-
-
 const emailInput = document.getElementById("email") || document.getElementById("signup-email");
 const passwordInput = document.getElementById("password") || document.getElementById("signup-password");
 const loginButton = document.getElementById("login-button");
@@ -38,7 +34,10 @@ if (loginButton) {
         const email = emailInput.value;
         const password = passwordInput.value;
         signInWithEmailAndPassword(auth, email, password)
-            .then(() => window.location.href = "chat.html")
+            .then(() => {
+                console.log("Login successful");
+                window.location.href = "chat.html";
+            })
             .catch((error) => alert(error.message));
     });
 }
@@ -48,7 +47,10 @@ if (signupButton) {
         const email = emailInput.value;
         const password = passwordInput.value;
         createUserWithEmailAndPassword(auth, email, password)
-            .then(() => window.location.href = "chat.html")
+            .then(() => {
+                console.log("Signup successful");
+                window.location.href = "chat.html";
+            })
             .catch((error) => alert(error.message));
     });
 }
@@ -56,40 +58,54 @@ if (signupButton) {
 if (logoutButton) {
     logoutButton.addEventListener("click", () => {
         signOut(auth)
-            .then(() => window.location.href = "index.html")
+            .then(() => {
+                console.log("Logout successful");
+                window.location.href = "index.html";
+            })
             .catch((error) => alert(error.message));
     });
 }
 
 onAuthStateChanged(auth, (user) => {
+    console.log("Auth state changed:", user);
+    const currentPath = window.location.pathname;
     if (user) {
-        if (window.location.pathname !== "/chat.html") {
+        // If logged in, redirect to chat.html only if not already there
+        if (!currentPath.endsWith("chat.html")) {
+            console.log("Redirecting to chat.html");
             window.location.href = "chat.html";
         }
-        welcomeMessage.textContent = `Welcome, ${user.email}`;
+        if (welcomeMessage) {
+            welcomeMessage.textContent = `Welcome, ${user.email}`;
+        }
         fetchMessages();
     } else {
-        if (window.location.pathname !== "/index.html" && window.location.pathname !== "/signup.html") {
+        // If not logged in, redirect to index.html only if not already there
+        if (!currentPath.endsWith("index.html") && !currentPath.endsWith("signup.html")) {
+            console.log("Redirecting to index.html");
             window.location.href = "index.html";
         }
     }
 });
 
-
 // Fetch messages in real-time
 function fetchMessages() {
     const messagesQuery = query(messagesRef, orderBy("timestamp", "asc"));
     onSnapshot(messagesQuery, (snapshot) => {
-        messagesDiv.innerHTML = "";
-        snapshot.forEach((doc) => {
-            const messageData = doc.data();
-            const messageDiv = document.createElement("div");
-            messageDiv.classList.add("message");
-            messageDiv.textContent = `${messageData.user}: ${messageData.text}`;
-            if (messageData.user === auth.currentUser.email) messageDiv.classList.add("user");
-            messagesDiv.appendChild(messageDiv);
-        });
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        if (messagesDiv) {
+            messagesDiv.innerHTML = "";
+            snapshot.forEach((doc) => {
+                const messageData = doc.data();
+                const messageDiv = document.createElement("div");
+                messageDiv.classList.add("message");
+                messageDiv.textContent = `${messageData.user}: ${messageData.text}`;
+                if (messageData.user === auth.currentUser.email) {
+                    messageDiv.classList.add("user");
+                }
+                messagesDiv.appendChild(messageDiv);
+            });
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
     });
 }
 
