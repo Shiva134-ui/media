@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat - Live Chat with Friends</title>
+  <link rel="stylesheet" href="chat.css">
+  <script type="module" src="app.js" defer></script>
+  <script type="module" src="script.js"></script>
+</head>
+<body>
+  <div class="container">
+    <div id="chat-container">
+      <div id="header">
+        <span id="welcome-message"></span>
+        <button id="logout-button">Logout</button>
+      </div>
+      <div id="messages" ></div>
+      <button id="down-arrow" class="down-arrow">⬇</button>
+      <div id="input-area">
+        <input type="text" id="message-input" placeholder="Type your message...">
+        <button id="send-button">Send</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
