@@ -29,6 +29,17 @@ const sendButton = document.getElementById("send-button");
 
 const messagesRef = collection(db, "messages");
 
+// Prevent Infinite Redirects
+function redirectTo(path) {
+    if (window.location.pathname !== path) {
+        console.log(`Redirecting to: ${path}`);
+        window.location.href = path;
+    } else {
+        console.log(`Already on: ${path}`);
+    }
+}
+
+// Add Event Listeners
 if (loginButton) {
     loginButton.addEventListener("click", () => {
         const email = emailInput.value;
@@ -36,7 +47,7 @@ if (loginButton) {
         signInWithEmailAndPassword(auth, email, password)
             .then(() => {
                 console.log("Login successful");
-                window.location.href = "chat.html";
+                redirectTo("/chat.html");
             })
             .catch((error) => alert(error.message));
     });
@@ -49,7 +60,7 @@ if (signupButton) {
         createUserWithEmailAndPassword(auth, email, password)
             .then(() => {
                 console.log("Signup successful");
-                window.location.href = "chat.html";
+                redirectTo("/chat.html");
             })
             .catch((error) => alert(error.message));
     });
@@ -60,35 +71,31 @@ if (logoutButton) {
         signOut(auth)
             .then(() => {
                 console.log("Logout successful");
-                window.location.href = "index.html";
+                redirectTo("/index.html");
             })
             .catch((error) => alert(error.message));
     });
 }
 
+// Monitor Authentication State
 onAuthStateChanged(auth, (user) => {
     console.log("Auth state changed:", user);
-    const currentPath = window.location.pathname;
     if (user) {
-        // If logged in, redirect to chat.html only if not already there
-        if (!currentPath.endsWith("chat.html")) {
-            console.log("Redirecting to chat.html");
-            window.location.href = "chat.html";
-        }
+        // Redirect to chat.html only if not already there
         if (welcomeMessage) {
             welcomeMessage.textContent = `Welcome, ${user.email}`;
         }
         fetchMessages();
+        redirectTo("/chat.html");
     } else {
-        // If not logged in, redirect to index.html only if not already there
-        if (!currentPath.endsWith("index.html") && !currentPath.endsWith("signup.html")) {
-            console.log("Redirecting to index.html");
-            window.location.href = "index.html";
+        // Redirect to index.html only if not on index.html or signup.html
+        if (!window.location.pathname.endsWith("/index.html") && !window.location.pathname.endsWith("/signup.html")) {
+            redirectTo("/index.html");
         }
     }
 });
 
-// Fetch messages in real-time
+// Fetch Messages
 function fetchMessages() {
     const messagesQuery = query(messagesRef, orderBy("timestamp", "asc"));
     onSnapshot(messagesQuery, (snapshot) => {
@@ -109,7 +116,7 @@ function fetchMessages() {
     });
 }
 
-// Send a new message
+// Send Message
 if (sendButton) {
     sendButton.addEventListener("click", async () => {
         const messageText = messageInput.value.trim();
@@ -123,6 +130,7 @@ if (sendButton) {
         }
     });
 }
+
 
 
 
